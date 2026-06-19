@@ -122,9 +122,28 @@ function Portfolio() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleResumeDownload = () => {
-    window.location.href = "/download-resume";
+  const handleResumeDownload = async () => {
     setDownloads((prev) => prev + 1);
+    try {
+      // Trigger the server counter in the background
+      fetch("/download-resume").catch(() => {});
+
+      // Fetch the file and force download via a Blob
+      const response = await fetch("/resume.pdf");
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "Marchad-Sohan-Resume.pdf");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading file programmatically:", error);
+      // Fallback: trigger standard navigation
+      window.location.href = "/download-resume";
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
